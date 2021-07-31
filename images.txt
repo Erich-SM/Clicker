@@ -1,0 +1,2 @@
+/home/schro/clicker/gamedata/redsquare.png
+/home/schro/clicker/gamedata/greensquare.png
