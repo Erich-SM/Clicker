@@ -1,2 +1,3 @@
 I /home/schro/clicker/gamedata/redsquare.png
 I /home/schro/clicker/gamedata/greensquare.png
+M /home/schro/clicker/gamedata/tmp.wav

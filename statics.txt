@@ -1,2 +1,3 @@
 /home/schro/clicker/gamedata/gotonext.png
 /home/schro/clicker/gamedata/heart.png
+NULL

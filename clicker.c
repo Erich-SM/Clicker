@@ -1,4 +1,4 @@
-#include "raylib.h" /* gamecode */
+#include "raylib.h" /* game  code */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -159,10 +159,9 @@ main()
 	RemNewLine(lineContent);
 
 	/* define clicker obj */
-	FileParser(2, "statics.txt");
+	FileParser(3, "statics.txt");
 	RemNewLine(lineContent);
-	Music clickSFX = LoadMusicStream(lineContent);
-	music.looping = false;
+	Sound clickSFX = LoadSound(lineContent);
 	Image clickerImg = LoadImage(lineContent);
 	ImageResize(&clickerImg, 200, 200);
         Texture2D clicker = LoadTextureFromImage(clickerImg); // Load button texture  
