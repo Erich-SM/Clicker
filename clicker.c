@@ -1,4 +1,4 @@
-#include "raylib.h" /* game code */
+#include "raylib.h" /* gamecode */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,6 +53,7 @@ ImgSetUp()
 {
 	FILE *fp = fopen("input.txt", "r");
 	FILE *ifp = fopen("images.txt", "w+");
+	FILE *mfp = fopen("music.txt", "w+");
 	char line[200];
 	char lineToMove[200];
 	while(fgets(line, sizeof(line), fp) != NULL){
@@ -62,6 +63,12 @@ ImgSetUp()
 				memmove(lineToMove, lineToMove+1, strlen(lineToMove));
 				RemWhiteSpace(lineToMove);
 				fprintf(ifp, "%s", lineToMove);
+				break;
+			case 'M':
+				memcpy(lineToMove, line, sizeof(line));
+				memmove(lineToMove, lineToMove+1, strlen(lineToMove));
+				RemWhiteSpace(lineToMove);
+				fprintf(mfp, "%s", lineToMove);
 				break;
 			default:
 				printf("You fucked up, sorry ¯\\_(ツ)_/¯");
@@ -123,6 +130,9 @@ main()
 	Rectangle srcRectan = { 0, 0, (float)gotonext.width, (float)gotonext.height };
 	Rectangle gtnBounds = { screenWidth/2.0f - gotonext.width/2.0f - 200, screenHeight/2.0f - gotonext.height/2.0f - 200, (float)gotonext.width, (float)gotonext.height };
 	int gotoNextCnt = 1;
+	int gframeWidth = gotonext.width;
+        int gframeHeight = gotonext.height;
+	Vector2 origin = { (float)gframeWidth, (float)gframeHeight };
 
 	/* Music */
 	FileParser(0, "music.txt");
@@ -149,6 +159,10 @@ main()
 	RemNewLine(lineContent);
 
 	/* define clicker obj */
+	FileParser(2, "statics.txt");
+	RemNewLine(lineContent);
+	Music clickSFX = LoadMusicStream(lineContent);
+	music.looping = false;
 	Image clickerImg = LoadImage(lineContent);
 	ImageResize(&clickerImg, 200, 200);
         Texture2D clicker = LoadTextureFromImage(clickerImg); // Load button texture  
@@ -194,6 +208,7 @@ main()
 			if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
 				for(int i = 0; i < 1; i++){
 					if(heartCount < MAX_HEARTS){
+						PlaySound(clickSFX);
 						heart[heartCount].position = GetMousePosition();
 						heart[heartCount].speed.x = 0.0f; /* TODO: Add wobble */
 						heart[heartCount].speed.y = (float)GetRandomValue(-250, -500)/60.0f;
@@ -215,13 +230,14 @@ main()
 
 			ClearBackground(RAYWHITE);
 
+			DrawTextureRec(clicker, sourceRec, (Vector2){ btnBounds.x, btnBounds.y }, WHITE);
+
 			for(int i = 0; i < heartCount; i++){
 				DrawTexture(texHeart, (int)heart[i].position.x, (int)heart[i].position.y, RAYWHITE);
 			}
 
 			DrawText(TextFormat("%i", s_clicker.numClicks), 400, 200, 20, LIGHTGRAY);
 			DrawText(TextFormat("heart count: %i", heartCount), 400, 200, 20, LIGHTGRAY);
-			DrawTextureRec(clicker, sourceRec, (Vector2){ btnBounds.x, btnBounds.y }, WHITE);
 			DrawTextureRec(gotonext, srcRectan, (Vector2){ gtnBounds.x, gtnBounds.y }, WHITE);
 
 		
