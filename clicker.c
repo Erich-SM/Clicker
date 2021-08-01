@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 /* defines */
 #define MAX_HEARTS 50000
 
@@ -23,7 +24,20 @@ char lineContent[344];
 
 /* proto types */
 void RemNewLine(char *str);
-char* ImgParser(int lineNumber);
+void RemWhiteSpace(char *s);
+char* FileParser(int lineNumber, const char filename[]);
+void ImgSetUp();
+
+void
+RemWhiteSpace(char *s)
+{
+	const char *d = s;
+	do {
+		while(*d == ' '){
+			++d;
+		}
+	} while (*s++ = *d++);
+}
 
 /* Remove trailing newlines to avoid borkages */
 void RemNewLine(char *str) {
@@ -34,11 +48,33 @@ void RemNewLine(char *str) {
     str[length-1]  = '\0';
 }
 
+void
+ImgSetUp()
+{
+	FILE *fp = fopen("input.txt", "r");
+	FILE *ifp = fopen("images.txt", "w+");
+	char line[200];
+	char lineToMove[200];
+	while(fgets(line, sizeof(line), fp) != NULL){
+		switch(line[0]){
+			case 'I':
+				memcpy(lineToMove, line, sizeof(line));
+				memmove(lineToMove, lineToMove+1, strlen(lineToMove));
+				RemWhiteSpace(lineToMove);
+				fprintf(ifp, "%s", lineToMove);
+				break;
+			default:
+				printf("You fucked up, sorry ¯\\_(ツ)_/¯");
+		}
+	}
+	fclose(fp);
+	fclose(ifp);
+}
+
 /* Parse the txt file to get file path of specfic line */
 char*
-ImgParser(int lineNumber)
+FileParser(int lineNumber, const char filename[])
 {
-	static const char filename[] = "images.txt";
 	FILE *file = fopen(filename, "r");
 	int count = 0;
 	if(file != NULL) {
@@ -69,6 +105,8 @@ main()
 	const int screenHeight = 800;
 
 	InitWindow(screenWidth, screenHeight, "clicker!");
+	InitAudioDevice();
+	ImgSetUp();
 
 	/* Set up clicker struct */
 	struct Clicker s_clicker;
@@ -76,14 +114,29 @@ main()
 	s_clicker.numClicks = 0;
 
 	/* gotonext */
-	Texture2D gotonext = LoadTexture("gamedata/gotonext.png");
+	FileParser(0, "statics.txt");
+	RemNewLine(lineContent);
+	Image gotonextImg = LoadImage(lineContent);
+	ImageResize(&gotonextImg, 100, 70);
+        Texture2D gotonext = LoadTextureFromImage(gotonextImg); // Load button texture  
+	UnloadImage(gotonextImg);
 	Rectangle srcRectan = { 0, 0, (float)gotonext.width, (float)gotonext.height };
 	Rectangle gtnBounds = { screenWidth/2.0f - gotonext.width/2.0f - 200, screenHeight/2.0f - gotonext.height/2.0f - 200, (float)gotonext.width, (float)gotonext.height };
 	int gotoNextCnt = 1;
 
+	/* Music */
+	FileParser(0, "music.txt");
+	RemNewLine(lineContent);
+	Music music = LoadMusicStream(lineContent);
+	music.looping = true;
+	PlayMusicStream(music);
+	bool pause = false;
+
 
 	/* Set up hearts */
-	Image heartImg = LoadImage("gamedata/heart.png");
+	FileParser(1, "statics.txt");
+	RemNewLine(lineContent);
+	Image heartImg = LoadImage(lineContent);
 	ImageResize(&heartImg, 20, 20);
 	Texture2D texHeart = LoadTextureFromImage(heartImg);
 	Heart *heart = (Heart *)malloc(MAX_HEARTS*sizeof(Heart));
@@ -91,12 +144,13 @@ main()
 	int heartCount = 0;
 
 	/* parse image */
-	ImgParser(s_clicker.lineNumber);
+	const char filename[] = "images.txt";
+	FileParser(s_clicker.lineNumber, filename);
 	RemNewLine(lineContent);
 
 	/* define clicker obj */
 	Image clickerImg = LoadImage(lineContent);
-	ImageResize(&clickerImg, 50, 50);
+	ImageResize(&clickerImg, 200, 200);
         Texture2D clicker = LoadTextureFromImage(clickerImg); // Load button texture  
 	UnloadImage(clickerImg);
 	float frameHeight = (float)clicker.height;
@@ -111,13 +165,21 @@ main()
 
 	while(!WindowShouldClose()){
 
+		UpdateMusicStream(music);
+		if(IsKeyPressed(KEY_P)){
+			pause = !pause;
+
+			if(pause) PauseMusicStream(music);
+			else ResumeMusicStream(music);
+		}
+
 		mousePoint = GetMousePosition();
 
 		/* Set up Mouse click action */
 		if(CheckCollisionPointRec(mousePoint, gtnBounds)){
 			if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
 				s_clicker.lineNumber++; /* inc lineNumber */
-				ImgParser(s_clicker.lineNumber); /* grab new line contents */
+				FileParser(s_clicker.lineNumber, filename); /* grab new line contents */
 				RemNewLine(lineContent);
 				UnloadTexture(clicker); /* Unload texture for reloading */
 				Image clickerImg = LoadImage(lineContent);
